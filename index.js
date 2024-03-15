@@ -50,7 +50,7 @@ async function run() {
             }
         })
 
-        // for users
+        // for conversations
         app.post('/api/conversations', async (req, res) => {
             try {
                 const { senderId, receiverId } = req.body
