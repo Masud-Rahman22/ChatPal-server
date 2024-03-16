@@ -73,8 +73,9 @@ async function run() {
         app.get('/api/conversations/:userId', async (req, res) => {
             try {
                 const userId = req.params.userId
-                const conversations = { members: { $in: [userId] } }
-                const conversationUserData = conversations.map(async(conversation)=>{
+                const singleConversations = await conversationCollection.find({ members: { $in: [userId] } })
+                console.log(singleConversations)
+                const conversationUserData = singleConversations.map(async(conversation)=>{
                     const receiverId = conversation.find((member)=> member !== userId)
                     return await conversationCollection.findOne( { members : receiverId})
                 }) 
