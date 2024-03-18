@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 const port = process.env.PORT || 3000;
-
+const Users = require('./models/Users')
 
 app.use(cors())
 app.use(express.json())
@@ -16,6 +16,7 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 mongoose.connect(uri)
 .then(()=> console.log('connected to mongoDB'))
 .catch((err)=> console.error('could not connect to mongoDB',err))
+
 
 
 app.get('/', (req, res) => {
