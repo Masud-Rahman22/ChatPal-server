@@ -38,6 +38,10 @@ app.post('/api/register', async(req,res,next)=>{
     }
 })
 
+app.post('/api/login',async(req,res)=>{
+    
+})
+
 app.get('/', (req, res) => {
     res.send('Project is running properly')
 })
