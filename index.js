@@ -39,7 +39,25 @@ app.post('/api/register', async(req,res,next)=>{
 })
 
 app.post('/api/login',async(req,res)=>{
-    
+    const { email,password} = req.body;
+    if(!email || !password){
+        res.status(400).send('please fill all required fields')
+    }
+    else{
+        const user = await Users.findOne({email})
+        if(!user){
+            res.status(404).send('User email or password is incorrect')
+        }
+        else{
+            const validatedUser = await bcryptjs.compare(password, user?.password)
+            if(!validatedUser){
+                res.status(404).send('User email or password is incorrect')
+            }
+            else{
+                res.status(200).send('User is logged in successfully')
+            }
+        }
+    }
 })
 
 app.get('/', (req, res) => {
