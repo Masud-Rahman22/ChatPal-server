@@ -5,6 +5,7 @@ const cors = require('cors');
 require('dotenv').config();
 const port = process.env.PORT || 3000;
 const Users = require('./models/Users')
+const conversations = require('./models/conversations')
 const bcryptjs = require('bcryptjs')
 
 app.use(cors())
@@ -57,6 +58,17 @@ app.post('/api/login',async(req,res)=>{
                 res.status(200).send('User is logged in successfully')
             }
         }
+    }
+})
+
+app.post('/api/conversation', async(req,res)=>{
+    try {
+        const {senderId,receiverId} = req.body;
+        const newConversation = new conversations({members: [senderId,receiverId]})
+        await newConversation.save()
+        res.status(200).send('conversation created successfully')
+    } catch (error) {
+        res.status(400).send('error', error)
     }
 })
 
