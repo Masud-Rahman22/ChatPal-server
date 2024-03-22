@@ -7,6 +7,7 @@ const port = process.env.PORT || 3000;
 const Users = require('./models/Users')
 const bcryptjs = require('bcryptjs');
 const Conversation = require('./models/conversations');
+const Messages = require('./models/messages');
 
 app.use(cors())
 app.use(express.json())
@@ -76,12 +77,37 @@ app.get('/api/conversation/:id', async (req, res) => {
     try {
         const id = req.params.id
         const conversations = await Conversation.find({ members: { $in: [id] } })
-        const conversationDataOfUser = Promise.all(conversations.map(async(conversation)=>{
-            const receiverId = conversation.members.find(member=> member !== id)
+        const conversationDataOfUser = Promise.all(conversations.map(async (conversation) => {
+            const receiverId = conversation.members.find(member => member !== id)
             const user = await Users.findById(receiverId)
-            return {user: {email: user?.email, fullName: user?.fullName}, conversationId: conversation?._id}
+            return { user: { email: user?.email, fullName: user?.fullName }, conversationId: conversation?._id }
         }))
         res.status(200).json(await conversationDataOfUser)
+    } catch (error) {
+        console.log(error, "error")
+    }
+})
+
+app.post('/api/message', async (req, res) => {
+    try {
+        const { conversationId, senderId, message } = req.body;
+        const newMessage = new Messages({ conversationId: conversationId, senderId: senderId, message: message })
+        await newMessage.save()
+        res.status(200).send('message sent successfully')
+    } catch (error) {
+        console.log(error, "error")
+    }
+})
+
+app.get('/api/message/:conversationId', async(req,res)=>{
+    try {
+        const conversationId = req.params.conversationId
+        const messages = await Messages.find({conversationId})
+        const messageUserData = Promise.all(messages.map(async(message)=>{
+            const user = await Users.findById(message.senderId)
+            return {user: {fullName: user.fullName, email: user.email}, message: message.message}
+        }))
+        res.status(200).json(await messageUserData)
     } catch (error) {
         console.log(error, "error")
     }
