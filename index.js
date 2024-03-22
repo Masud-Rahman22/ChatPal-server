@@ -113,6 +113,18 @@ app.get('/api/message/:conversationId', async(req,res)=>{
     }
 })
 
+app.get('/api/users', async(req,res)=>{
+    try {
+        const users = await Users.find()
+        const usersData = Promise.all(users.map(async(user)=>{
+            return {user: {fullName: user.fullName, email: user.email}, userId: user._id}
+        }))
+        res.status(200).json(await usersData)
+    } catch (error) {
+        console.log(error, "error")
+    }
+})
+
 app.get('/', (req, res) => {
     res.send('Project is running properly')
 })
