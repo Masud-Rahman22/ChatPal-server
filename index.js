@@ -5,8 +5,8 @@ const cors = require('cors');
 require('dotenv').config();
 const port = process.env.PORT || 3000;
 const Users = require('./models/Users')
-const conversations = require('./models/conversations')
-const bcryptjs = require('bcryptjs')
+const bcryptjs = require('bcryptjs');
+const Conversation = require('./models/conversations');
 
 app.use(cors())
 app.use(express.json())
@@ -14,22 +14,22 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.aw2xu1p.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 mongoose.connect(uri)
-.then(()=> console.log('connected to mongoDB'))
-.catch((err)=> console.error('could not connect to mongoDB',err))
+    .then(() => console.log('connected to mongoDB'))
+    .catch((err) => console.error('could not connect to mongoDB', err))
 
-app.post('/api/register', async(req,res,next)=>{
-    const {fullName, email,password} = req.body;
-    if(!fullName || !email || !password){
+app.post('/api/register', async (req, res, next) => {
+    const { fullName, email, password } = req.body;
+    if (!fullName || !email || !password) {
         res.status(400).send('please fill all required fields')
     }
-    else{
-        const isAlreadyExist = await Users.findOne({email})
-        if(isAlreadyExist){
+    else {
+        const isAlreadyExist = await Users.findOne({ email })
+        if (isAlreadyExist) {
             res.status(400).send('User already exists')
         }
-        else{
-            const newUser = new Users({fullName: fullName, email: email})
-            bcryptjs.hash(password, 10, (err,hashedPassword)=>{
+        else {
+            const newUser = new Users({ fullName: fullName, email: email })
+            bcryptjs.hash(password, 10, (err, hashedPassword) => {
                 newUser.set('password', hashedPassword)
                 newUser.save()
                 next()
@@ -39,36 +39,51 @@ app.post('/api/register', async(req,res,next)=>{
     }
 })
 
-app.post('/api/login',async(req,res)=>{
-    const { email,password} = req.body;
-    if(!email || !password){
+app.post('/api/login', async (req, res) => {
+    const { email, password } = req.body;
+    if (!email || !password) {
         res.status(400).send('please fill all required fields')
     }
-    else{
-        const user = await Users.findOne({email})
-        if(!user){
+    else {
+        const user = await Users.findOne({ email })
+        if (!user) {
             res.status(404).send('User email or password is incorrect')
         }
-        else{
+        else {
             const validatedUser = await bcryptjs.compare(password, user?.password)
-            if(!validatedUser){
+            if (!validatedUser) {
                 res.status(404).send('User email or password is incorrect')
             }
-            else{
+            else {
                 res.status(200).send('User is logged in successfully')
             }
         }
     }
 })
 
-app.post('/api/conversation', async(req,res)=>{
+app.post('/api/conversation', async (req, res) => {
     try {
-        const {senderId,receiverId} = req.body;
-        const newConversation = new conversations({members: [senderId,receiverId]})
+        const { senderId, receiverId } = req.body;
+        const newConversation = new Conversation({ members: [senderId, receiverId] })
         await newConversation.save()
         res.status(200).send('conversation created successfully')
     } catch (error) {
-        res.status(400).send('error', error)
+        console.log(error, "error")
+    }
+})
+
+app.get('/api/conversation/:id', async (req, res) => {
+    try {
+        const id = req.params.id
+        const conversations = await Conversation.find({ members: { $in: [id] } })
+        const conversationDataOfUser = Promise.all(conversations.map(async(conversation)=>{
+            const receiverId = conversation.members.find(member=> member !== id)
+            const user = await Users.findById(receiverId)
+            return {user: {email: user?.email, fullName: user?.fullName}, conversationId: conversation?._id}
+        }))
+        res.status(200).json(await conversationDataOfUser)
+    } catch (error) {
+        console.log(error, "error")
     }
 })
 
