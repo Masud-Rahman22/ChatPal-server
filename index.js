@@ -56,7 +56,7 @@ app.post('/api/login', async (req, res) => {
                 res.status(404).send('User email or password is incorrect')
             }
             else {
-                res.status(200).send('User is logged in successfully')
+                return res.status(200).json({ user: { id: user._id, email: user.email, password: user.password } })
             }
         }
     }
@@ -80,7 +80,7 @@ app.get('/api/conversation/:id', async (req, res) => {
         const conversationDataOfUser = Promise.all(conversations.map(async (conversation) => {
             const receiverId = conversation.members.find(member => member !== id)
             const user = await Users.findById(receiverId)
-            return { user: { email: user?.email, fullName: user?.fullName }, conversationId: conversation?._id }
+            return { user: { receiverId: user?._id,email: user?.email, fullName: user?.fullName, photo: user?.photo }, conversationId: conversation?._id }
         }))
         res.status(200).json(await conversationDataOfUser)
     } catch (error) {
@@ -99,7 +99,7 @@ app.post('/api/message', async (req, res) => {
             await newMessage.save()
             return res.status(200).send('message sent successfully')
         }
-        else if(!conversationId && !receiverId){
+        else if (!conversationId && !receiverId) {
             return res.status(404).send('please fill all required fields')
         }
         const newMessage = new Messages({ conversationId: conversationId, senderId: senderId, message: message })
@@ -117,7 +117,7 @@ app.get('/api/message/:conversationId', async (req, res) => {
         const messages = await Messages.find({ conversationId })
         const messageUserData = Promise.all(messages.map(async (message) => {
             const user = await Users.findById(message.senderId)
-            return { user: { fullName: user.fullName, email: user.email }, message: message.message }
+            return { user: { id: user._id,fullName: user.fullName, email: user.email }, message: message.message }
         }))
         res.status(200).json(await messageUserData)
     } catch (error) {
@@ -129,7 +129,7 @@ app.get('/api/users', async (req, res) => {
     try {
         const users = await Users.find()
         const usersData = Promise.all(users.map(async (user) => {
-            return { user: { fullName: user.fullName, email: user.email }, userId: user._id }
+            return { user: { id: user._id,fullName: user.fullName, email: user.email, photo: user.photo}, userId: user._id }
         }))
         res.status(200).json(await usersData)
     } catch (error) {
