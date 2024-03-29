@@ -23,8 +23,36 @@ mongoose.connect(uri)
     .then(() => console.log('connected to mongoDB'))
     .catch((err) => console.error('could not connect to mongoDB', err))
 
-io.on('connection', socket =>{
+// socket.io
+let users = [];
+io.on('connection', socket => {
     console.log('user connected', socket.id)
+    socket.on('addUser', id => {
+        const isUserExist = users.find(user => user.id === id)
+        if (!isUserExist) {
+            const user = { id, socketId: socket.id }
+            users.push(user)
+            io.emit('getUsers', users)
+        }
+    })
+
+    socket.on('sendMessage', ({ conversationId, senderId, message, receiverId }) => {
+        const receiver = users.find(user => user.id === receiverId)
+        const sender = users.find(user => user.id === senderId)
+        if (receiver) {
+            io.to(receiver.socketId).to(sender.socketId).emit('getMessage', {
+                senderId,
+                receiverId,
+                message,
+                conversationId
+            })
+        }
+    })
+
+    socket.on('disconnect', () => {
+        users = users.filter(user => user.socketId !== socket.id)
+        io.emit('getUsers', users)
+    })
 })
 
 app.post('/api/register', async (req, res, next) => {
