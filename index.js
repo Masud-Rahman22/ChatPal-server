@@ -2,6 +2,11 @@ const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
+const io = require('socket.io')(8080, {
+    cors: {
+        origin: 'http://localhost:5173'
+    }
+});
 require('dotenv').config();
 const port = process.env.PORT || 3000;
 const Users = require('./models/Users')
@@ -17,6 +22,10 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 mongoose.connect(uri)
     .then(() => console.log('connected to mongoDB'))
     .catch((err) => console.error('could not connect to mongoDB', err))
+
+io.on('connection', socket =>{
+    console.log('user connected', socket.id)
+})
 
 app.post('/api/register', async (req, res, next) => {
     const { fullName, email, password } = req.body;
@@ -123,7 +132,7 @@ app.get('/api/message/:conversationId', async (req, res) => {
         }
         const conversationId = req.params.conversationId
         if (conversationId === 'new') {
-            const checkConversation = await Conversation.find({ members: { $in: [req.query.senderId, req.query.receiverId] } })
+            const checkConversation = await Conversation.find({ members: { $all: [req.query.senderId, req.query.receiverId] } })
             if (checkConversation.length > 0) {
                 checkMessage(checkConversation[0]._id)
             }
