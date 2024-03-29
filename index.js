@@ -36,15 +36,18 @@ io.on('connection', socket => {
         }
     })
 
-    socket.on('sendMessage', ({ conversationId, senderId, message, receiverId }) => {
+    socket.on('sendMessage', async ({ conversationId, senderId, message, receiverId }) => {
+        console.log(receiverId)
         const receiver = users.find(user => user.id === receiverId)
         const sender = users.find(user => user.id === senderId)
+        const user = await Users.findById(senderId)
         if (receiver) {
             io.to(receiver.socketId).to(sender.socketId).emit('getMessage', {
                 senderId,
                 receiverId,
                 message,
-                conversationId
+                conversationId,
+                user: { id: user._id, fullName: user.fullName, email: user.email }
             })
         }
     })
