@@ -4,11 +4,11 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const io = require('socket.io')(8080, {
     cors: {
-        origin: 'http://localhost:5173'
+        origin:  'http://localhost:5173'
     }
 });
 require('dotenv').config();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5001;
 const Users = require('./models/Users')
 const bcryptjs = require('bcryptjs');
 const Conversation = require('./models/conversations');
@@ -43,6 +43,15 @@ io.on('connection', socket => {
         const user = await Users.findById(senderId)
         if (receiver) {
             io.to(receiver.socketId).to(sender.socketId).emit('getMessage', {
+                senderId,
+                receiverId,
+                message,
+                conversationId,
+                user: { id: user._id, fullName: user.fullName, email: user.email }
+            })
+        }
+        else{
+            io.to(sender.socketId).emit('getMessage', {
                 senderId,
                 receiverId,
                 message,
@@ -199,3 +208,5 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`ChatPal a chat application on ${port}`);
 })
+
+// 'https://chatpal-e8086.web.app',
