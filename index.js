@@ -19,6 +19,7 @@ app.use(express.json())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.aw2xu1p.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
+// mongoose connection
 mongoose.connect(uri)
     .then(() => console.log('connected to mongoDB'))
     .catch((err) => console.error('could not connect to mongoDB', err))
