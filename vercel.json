@@ -7,10 +7,17 @@
         }
     ],
     "routes": [
+        { "handle": "filesystem" },
+        {
+            "src": "/api/(.*)",
+            "dest": "index.js"
+        },
         {
             "src": "/(.*)",
-            "dest": "/",
-            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+            "dest": "/"
         }
-    ]
+    ],
+    "env": {
+        "MONGODB_URI": "mongodb+srv://ChatPal:VsQCVV9GQkxNQCGj@cluster0.aw2xu1p.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+    }
 }

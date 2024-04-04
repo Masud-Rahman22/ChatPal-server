@@ -2,11 +2,11 @@ const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
-const io = require('socket.io')(8080, {
-    cors: {
-        origin:  'http://localhost:5173'
-    }
-});
+// const io = require('socket.io')(8080, {
+//     cors: {
+//         origin:  'http://localhost:5173'
+//     }
+// });
 require('dotenv').config();
 const port = process.env.PORT || 5001;
 const Users = require('./models/Users')
@@ -25,48 +25,48 @@ mongoose.connect(uri)
     .catch((err) => console.error('could not connect to mongoDB', err))
 
 // socket.io
-let users = [];
-io.on('connection', socket => {
-    console.log('user connected', socket.id)
-    socket.on('addUser', id => {
-        const isUserExist = users.find(user => user.id === id)
-        if (!isUserExist) {
-            const user = { id, socketId: socket.id }
-            users.push(user)
-            io.emit('getUsers', users)
-        }
-    })
+// let users = [];
+// io.on('connection', socket => {
+//     console.log('user connected', socket.id)
+//     socket.on('addUser', id => {
+//         const isUserExist = users.find(user => user.id === id)
+//         if (!isUserExist) {
+//             const user = { id, socketId: socket.id }
+//             users.push(user)
+//             io.emit('getUsers', users)
+//         }
+//     })
 
-    socket.on('sendMessage', async ({ conversationId, senderId, message, receiverId }) => {
-        console.log(receiverId)
-        const receiver = users.find(user => user.id === receiverId)
-        const sender = users.find(user => user.id === senderId)
-        const user = await Users.findById(senderId)
-        if (receiver) {
-            io.to(receiver.socketId).to(sender.socketId).emit('getMessage', {
-                senderId,
-                receiverId,
-                message,
-                conversationId,
-                user: { id: user._id, fullName: user.fullName, email: user.email }
-            })
-        }
-        else{
-            io.to(sender.socketId).emit('getMessage', {
-                senderId,
-                receiverId,
-                message,
-                conversationId,
-                user: { id: user._id, fullName: user.fullName, email: user.email }
-            })
-        }
-    })
+//     socket.on('sendMessage', async ({ conversationId, senderId, message, receiverId }) => {
+//         console.log(receiverId)
+//         const receiver = users.find(user => user.id === receiverId)
+//         const sender = users.find(user => user.id === senderId)
+//         const user = await Users.findById(senderId)
+//         if (receiver) {
+//             io.to(receiver.socketId).to(sender.socketId).emit('getMessage', {
+//                 senderId,
+//                 receiverId,
+//                 message,
+//                 conversationId,
+//                 user: { id: user._id, fullName: user.fullName, email: user.email }
+//             })
+//         }
+//         else{
+//             io.to(sender.socketId).emit('getMessage', {
+//                 senderId,
+//                 receiverId,
+//                 message,
+//                 conversationId,
+//                 user: { id: user._id, fullName: user.fullName, email: user.email }
+//             })
+//         }
+//     })
 
-    socket.on('disconnect', () => {
-        users = users.filter(user => user.socketId !== socket.id)
-        io.emit('getUsers', users)
-    })
-})
+//     socket.on('disconnect', () => {
+//         users = users.filter(user => user.socketId !== socket.id)
+//         io.emit('getUsers', users)
+//     })
+// })
 
 app.post('/api/register', async (req, res, next) => {
     const { fullName, email, password } = req.body;
